@@ -1,3 +1,4 @@
+// Also requires .env file with auth tokens.
 const Discord = require("discord.js");
 require("dotenv").config();
 const client = new Discord.Client();
@@ -8,8 +9,20 @@ const axios = require("axios").default; // HTTP handling
 
 let twitchToken;
 let twitchTokenResponse;
-let newStreamerName = "pokimane";
+let newStreamerName = "paymoneywubby";
 let newStreamerId;
+let streamsFollowed = [];
+
+function parseFollowList() {
+  fs.readFile("twitchstreamerlist.txt", "utf8", (error, data) => {
+    if (error) {
+      console.error(error);
+      return;
+    }
+    streamsFollowed = JSON.parse(data);
+    console.log(streamsFollowed);
+  });
+}
 
 function getTwitchToken() {
   axios
@@ -28,7 +41,7 @@ function getTwitchToken() {
 }
 
 function getStreamerId() {
-  axios
+  axios // Request streamer info by name
     .get(
       `https://api.twitch.tv/helix/search/channels?query=${newStreamerName}`,
       {
@@ -40,17 +53,25 @@ function getStreamerId() {
       }
     )
     .then(function (response) {
+      // Get the streamer ID number
       search = response.data;
       for (let i = 0; i < search.data.length; i++) {
         if (
           search.data[i].display_name.toUpperCase() ==
           newStreamerName.toUpperCase()
         ) {
-          newStreamerId = search.data[i].id + "\n";
-          fs.appendFile("twitchstreamerlist.txt", newStreamerId, (err) => {
-            console.log("New streamer added to the list!");
-            if (err) throw err;
-          });
+          newStreamerId = search.data[i].id;
+          if (streamsFollowed.includes(newStreamerId)) {
+            // see if this ID is a duplicate
+            console.log("Already following this streamer, aborted");
+          } else {
+            streamsFollowed.push(newStreamerId);
+            let streamsJSON = JSON.stringify(streamsFollowed); // if not, add to the list
+            fs.writeFile("twitchstreamerlist.txt", streamsJSON, (err) => {
+              if (err) throw err;
+              console.log("New streamer added to the list!");
+            });
+          }
         }
       }
     })
@@ -59,4 +80,5 @@ function getStreamerId() {
     });
 }
 
+parseFollowList();
 getTwitchToken();
