@@ -19,7 +19,8 @@ function getTwitchToken() {
     .then(function (response) {
       twitchTokenResponse = response.data;
       twitchToken = "Bearer " + twitchTokenResponse.access_token;
-      console.log(twitchToken);
+      getStreamerId();
+      return twitchToken;
     })
     .catch(function (error) {
       console.error(`Error obtaining Twitch access token: ${error}`);
@@ -28,13 +29,28 @@ function getTwitchToken() {
 
 function getStreamerId() {
   axios
-    .get(`https://api.twitch.tv/helix/search/channels?query=${newStreamerName}`)
+    .get(
+      `https://api.twitch.tv/helix/search/channels?query=${newStreamerName}`,
+      {
+        headers: {
+          // prettier-ignore
+          "Authorization": twitchToken,
+          "Client-Id": process.env.TWITCH_CLIENT_ID,
+        },
+      }
+    )
     .then(function (response) {
       search = response.data;
       for (let i = 0; i < search.data.length; i++) {
-        if (search.data[i].display_name.toUpperCase() == newStreamerName) {
-          newStreamerId = search.data[i].id;
-          fs.appendFile(twitchstreamerlist.txt, newStreamerId);
+        if (
+          search.data[i].display_name.toUpperCase() ==
+          newStreamerName.toUpperCase()
+        ) {
+          newStreamerId = search.data[i].id + "\n";
+          fs.appendFile("twitchstreamerlist.txt", newStreamerId, (err) => {
+            console.log("New streamer added to the list!");
+            if (err) throw err;
+          });
         }
       }
     })
@@ -43,27 +59,4 @@ function getStreamerId() {
     });
 }
 
-// async function getStreamerId() {
-//   let xhr = new XMLHttpRequest();
-//   xhr.setRequestHeader("Authorization", twitchToken);
-//   xhr.setRequestHeader("Client-Id", env.TWITCH_CLIENT_ID);
-//   console.log("I'm working 2");
-//   xhr.open(
-//     "GET",
-//     `https://api.twitch.tv/helix/search/channels?query=${newStreamerName}`,
-//     true
-//   );
-//   if (xhr.readyState === 4) {
-//     console.log("Im working 1");
-//     search = JSON.parse(xhr.responseText);
-//     for (let i = 0; i < search.data.length; i++) {
-//       if (search.data[i].display_name.toUpperCase() == newStreamerName) {
-//         newStreamerId = search.data[i].id;
-//         fs.appendFile(twitchstreamerlist.txt, newStreamerId); // on getting the ID, store to log
-//       }
-//     }
-//   }
-// }
-
 getTwitchToken();
-getStreamerId();
