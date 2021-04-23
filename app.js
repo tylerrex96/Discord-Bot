@@ -7,24 +7,30 @@ const prefix = "!"; // the trigger prefix for bot commands
 
 // This first section is entirely working with Twitch and their API. A list of IDs for streamers is compiled, and then live-alerts enabled. (WIP)
 
-const fs = require("fs"); // for logging to txt files
+const fs = require("fs"); // for logging to JSON files
 const axios = require("axios").default; // HTTP handling
 
 let twitchToken;
 let twitchTokenResponse;
 let newStreamerId;
-let newStreamerObj;
-let streamsFollowed = [];
+const streamsFollowed = [];
 let isDuplicate = false;
 
 function parseFollowList() {
-  fs.readFile("twitchstreamerlist.txt", "utf8", (error, data) => {
+  fs.readFile("twitchstreamerlist.json", (error, data) => {
     if (error) {
       console.error(error);
       return;
     }
-    streamsFollowed = JSON.stringify(data);
-    console.log(streamsFollowed);
+    const currentlyFollowed = JSON.parse(data).streamsFollowed;
+    console.log(currentlyFollowed); // returns an Array of Objects
+
+    currentlyFollowed.forEach((streamer) => {
+      streamsFollowed.push({
+        display_name: streamer.display_name,
+        id: streamer.id,
+      });
+    });
   });
 }
 
@@ -67,13 +73,12 @@ function getStreamerId(newStreamerName) {
             console.log("Already following this streamer, aborted");
             isDuplicate = true;
           } else {
-            newStreamerObj = {
-              id: newStreamerId,
+            streamsFollowed.push({
               display_name: newStreamerName,
-            };
-            streamsFollowed.push(newStreamerObj);
+              id: newStreamerId,
+            });
             let streamsJSON = JSON.stringify(streamsFollowed); // if not, add to the list
-            fs.writeFile("twitchstreamerlist.txt", streamsJSON, (err) => {
+            fs.writeFile("twitchstreamerlist.json", streamsJSON, (err) => {
               if (err) throw err;
               console.log("New streamer added to the list!");
             });
