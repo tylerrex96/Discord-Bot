@@ -67,9 +67,10 @@ function getStreamerId(newStreamerName) {
             console.log("Already following this streamer, aborted");
             isDuplicate = true;
           } else {
-            newStreamerObj = new Object();
-            newStreamerObj.id = newStreamerId;
-            newStreamerObj.display_name = newStreamerName;
+            newStreamerObj = {
+              id: newStreamerId,
+              display_name: newStreamerName,
+            };
             streamsFollowed.push(newStreamerObj);
             let streamsJSON = JSON.stringify(streamsFollowed); // if not, add to the list
             fs.writeFile("twitchstreamerlist.txt", streamsJSON, (err) => {
