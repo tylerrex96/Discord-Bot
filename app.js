@@ -3,13 +3,15 @@ const Discord = require("discord.js");
 require("dotenv").config();
 const client = new Discord.Client();
 client.login(process.env.BOT_TOKEN); // initialize discord.js server
+const prefix = "!"; // the trigger prefix for bot commands
+
+// This first section is entirely working with Twitch and their API. A list of IDs for streamers is compiled, and then live-alerts enabled. (WIP)
 
 const fs = require("fs"); // for logging to txt files
 const axios = require("axios").default; // HTTP handling
 
 let twitchToken;
 let twitchTokenResponse;
-let newStreamerName = "paymoneywubby";
 let newStreamerId;
 let streamsFollowed = [];
 
@@ -40,7 +42,7 @@ function getTwitchToken() {
     });
 }
 
-function getStreamerId() {
+function getStreamerId(newStreamerName) {
   axios // Request streamer info by name
     .get(
       `https://api.twitch.tv/helix/search/channels?query=${newStreamerName}`,
@@ -56,10 +58,7 @@ function getStreamerId() {
       // Get the streamer ID number
       search = response.data;
       for (let i = 0; i < search.data.length; i++) {
-        if (
-          search.data[i].display_name.toUpperCase() ==
-          newStreamerName.toUpperCase()
-        ) {
+        if (search.data[i].display_name == newStreamerName) {
           newStreamerId = search.data[i].id;
           if (streamsFollowed.includes(newStreamerId)) {
             // see if this ID is a duplicate
@@ -79,6 +78,22 @@ function getStreamerId() {
       console.error(`Error adding new Twitch streamer to follow: ${error}`);
     });
 }
+
+// Defining bot commands and interactions
+client.on("message", (msg) => {
+  if (msg.content.startsWith(prefix)) {
+    const msgBody = msg.content.slice(prefix.length);
+    const msgSplit = msgBody.split(" ");
+    switch (msgSplit[0]) {
+      case "newstreamer": // Adds a new streamer to the follow list
+        getStreamerId(msgSplit[1]);
+        msg.channel.send(`New streamer added: ${msgSplit[1]}`);
+        break;
+      case "liststreams":
+        break;
+    }
+  }
+});
 
 parseFollowList();
 getTwitchToken();
