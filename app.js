@@ -13,7 +13,9 @@ const axios = require("axios").default; // HTTP handling
 let twitchToken;
 let twitchTokenResponse;
 let newStreamerId;
+let newStreamerObj;
 let streamsFollowed = [];
+let isDuplicate = false;
 
 function parseFollowList() {
   fs.readFile("twitchstreamerlist.txt", "utf8", (error, data) => {
@@ -21,7 +23,7 @@ function parseFollowList() {
       console.error(error);
       return;
     }
-    streamsFollowed = JSON.parse(data);
+    streamsFollowed = JSON.stringify(data);
     console.log(streamsFollowed);
   });
 }
@@ -63,8 +65,12 @@ function getStreamerId(newStreamerName) {
           if (streamsFollowed.includes(newStreamerId)) {
             // see if this ID is a duplicate
             console.log("Already following this streamer, aborted");
+            isDuplicate = true;
           } else {
-            streamsFollowed.push(newStreamerId);
+            newStreamerObj = new Object();
+            newStreamerObj.id = newStreamerId;
+            newStreamerObj.display_name = newStreamerName;
+            streamsFollowed.push(newStreamerObj);
             let streamsJSON = JSON.stringify(streamsFollowed); // if not, add to the list
             fs.writeFile("twitchstreamerlist.txt", streamsJSON, (err) => {
               if (err) throw err;
@@ -87,8 +93,15 @@ client.on("message", (msg) => {
     switch (msgSplit[0]) {
       case "newstreamer": // Adds a new streamer to the follow list
         getStreamerId(msgSplit[1]);
-        msg.channel.send(`New streamer added: ${msgSplit[1]}`);
-        break;
+        console.log(isDuplicate);
+        if (isDuplicate) {
+          msg.channel.send("This streamer is already on the list!");
+          break;
+        } else {
+          msg.channel.send(`New streamer added: ${msgSplit[1]}`);
+          break;
+        }
+
       case "liststreams":
         break;
     }
