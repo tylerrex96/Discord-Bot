@@ -13,8 +13,10 @@ const axios = require("axios").default; // HTTP handling
 let twitchToken;
 let twitchTokenResponse;
 let newStreamerId;
+let newStreamerName;
 const streamsFollowed = [];
 let isDuplicate = false;
+let streamsFollowedNames;
 
 function parseFollowList() {
   fs.readFile("twitchstreamerlist.json", (error, data) => {
@@ -24,7 +26,6 @@ function parseFollowList() {
     }
     const currentlyFollowed = JSON.parse(data).streamsFollowed;
     console.log(currentlyFollowed); // returns an Array of Objects
-
     currentlyFollowed.forEach((streamer) => {
       streamsFollowed.push({
         display_name: streamer.display_name,
@@ -77,9 +78,11 @@ function getStreamerId(newStreamerName) {
               display_name: newStreamerName,
               id: newStreamerId,
             });
-            let streamsJSON = JSON.stringify(streamsFollowed); // if not, add to the list
-            fs.writeFile("twitchstreamerlist.json", streamsJSON, (err) => {
-              if (err) throw err;
+            const streamsJSON = JSON.stringify({
+              streamsFollowed,
+            }); // if not, add to the list
+            fs.writeFile("twitchstreamerlist.json", streamsJSON, (error) => {
+              if (error) throw error;
               console.log("New streamer added to the list!");
             });
           }
@@ -107,8 +110,18 @@ client.on("message", (msg) => {
           msg.channel.send(`New streamer added: ${msgSplit[1]}`);
           break;
         }
-
       case "liststreams":
+        streamsFollowedNames = [];
+        streamsFollowed.forEach((streamer) => {
+          streamsFollowedNames.push(streamer.display_name);
+        });
+        msg.channel.send(
+          `Streams currently being followed: ${streamsFollowedNames.join(
+            ", "
+          )}.`
+        );
+        break;
+      case "commands":
         break;
     }
   }

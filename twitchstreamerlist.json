@@ -1,1 +1,6 @@
-[{ "display_name": "pokimane", "id": "44445592" }]
+{
+  "streamsFollowed": [
+    { "display_name": "pokimane", "id": "44445592" },
+    { "display_name": "PaymoneyWubby", "id": "38251312" }
+  ]
+}
