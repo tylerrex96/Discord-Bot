@@ -24,8 +24,7 @@ function parseFollowList() {
       console.error(error);
       return;
     }
-    const currentlyFollowed = JSON.parse(data).streamsFollowed;
-    console.log(currentlyFollowed); // returns an Array of Objects
+    const currentlyFollowed = JSON.parse(data).streamsFollowed; // returns an Array of Objects
     currentlyFollowed.forEach((streamer) => {
       streamsFollowed.push({
         display_name: streamer.display_name,
@@ -69,23 +68,16 @@ function getStreamerId(newStreamerName) {
       for (let i = 0; i < search.data.length; i++) {
         if (search.data[i].display_name == newStreamerName) {
           newStreamerId = search.data[i].id;
-          if (streamsFollowed.includes(newStreamerId)) {
-            // see if this ID is a duplicate
-            console.log("Already following this streamer, aborted");
-            isDuplicate = true;
-          } else {
-            streamsFollowed.push({
-              display_name: newStreamerName,
-              id: newStreamerId,
-            });
-            const streamsJSON = JSON.stringify({
-              streamsFollowed,
-            }); // if not, add to the list
-            fs.writeFile("twitchstreamerlist.json", streamsJSON, (error) => {
-              if (error) throw error;
-              console.log("New streamer added to the list!");
-            });
-          }
+          streamsFollowed.push({
+            display_name: newStreamerName,
+            id: newStreamerId,
+          });
+          const streamsJSON = JSON.stringify({
+            streamsFollowed,
+          });
+          fs.writeFile("twitchstreamerlist.json", streamsJSON, (error) => {
+            if (error) throw error;
+          });
         }
       }
     })
@@ -101,16 +93,20 @@ client.on("message", (msg) => {
     const msgSplit = msgBody.split(" ");
     switch (msgSplit[0]) {
       case "newstreamer": // Adds a new streamer to the follow list
-        getStreamerId(msgSplit[1]);
-        console.log(isDuplicate);
-        if (isDuplicate) {
+        streamsFollowedNames = [];
+        streamsFollowed.forEach((streamer) => {
+          // appears to be case sensitive, will fix later
+          streamsFollowedNames.push(streamer.display_name); // maybe make this to a function later
+        });
+        if (streamsFollowedNames.includes(msgSplit[1])) {
           msg.channel.send("This streamer is already on the list!");
           break;
         } else {
           msg.channel.send(`New streamer added: ${msgSplit[1]}`);
+          getStreamerId(msgSplit[1]);
           break;
         }
-      case "liststreams":
+      case "liststreams": // list the names of all channels currently being followed
         streamsFollowedNames = [];
         streamsFollowed.forEach((streamer) => {
           streamsFollowedNames.push(streamer.display_name);
@@ -122,7 +118,12 @@ client.on("message", (msg) => {
         );
         break;
       case "commands":
+        msg.channel.send(
+          "Currently available commands: !newstreamer, !liststreams, !commands."
+        );
         break;
+      default:
+        msg.channel.send("Sorry! Didn't recognize that command.");
     }
   }
 });
