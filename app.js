@@ -86,6 +86,21 @@ function getStreamerId(newStreamerName) {
     });
 }
 
+async function twitchLiveNotifications() {
+  axios
+    .post("https://api.twitch.tv/helix/eventsub/subscriptions", {
+      headers: {
+        // prettier-ignore
+        "Client-ID": process.env.TWITCH_CLIENT_ID,
+        Authorization: twitchToken,
+        "Content-Type": "application/json",
+      },
+    })
+    .catch(function (error) {
+      if (error) throw error;
+    });
+}
+
 // Defining bot commands and interactions
 client.on("message", (msg) => {
   if (msg.content.startsWith(prefix)) {
