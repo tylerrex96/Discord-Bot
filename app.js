@@ -90,9 +90,9 @@ async function twitchLiveNotifications() {
   axios
     .post("https://api.twitch.tv/helix/eventsub/subscriptions", {
       headers: {
-        // prettier-ignore
         "Client-ID": process.env.TWITCH_CLIENT_ID,
-        Authorization: twitchToken,
+        // prettier-ignore
+        "Authorization": twitchToken,
         "Content-Type": "application/json",
       },
     })
