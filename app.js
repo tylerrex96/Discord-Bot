@@ -3,6 +3,11 @@ const Discord = require("discord.js");
 require("dotenv").config();
 const client = new Discord.Client();
 client.login(process.env.BOT_TOKEN); // initialize discord.js server
+var channel;
+client.once("ready", () => {
+  channel = client.channels.cache.get("773286118753828914");
+});
+
 const prefix = "!"; // the trigger prefix for bot commands
 
 // This first section is entirely working with Twitch and their API. A list of IDs for streamers is compiled, and then live-alerts enabled. (WIP)
@@ -12,10 +17,7 @@ const axios = require("axios").default; // HTTP handling
 
 let twitchToken;
 let twitchTokenResponse;
-let newStreamerId;
-let newStreamerName;
 const streamsFollowed = [];
-let isDuplicate = false;
 let streamsFollowedNames;
 
 function parseFollowList() {
@@ -29,8 +31,10 @@ function parseFollowList() {
       streamsFollowed.push({
         display_name: streamer.display_name,
         id: streamer.id,
+        is_live: streamer.is_live,
       });
     });
+    console.log(streamsFollowed);
   });
 }
 
@@ -42,7 +46,6 @@ function getTwitchToken() {
     .then(function (response) {
       twitchTokenResponse = response.data;
       twitchToken = "Bearer " + twitchTokenResponse.access_token;
-      getStreamerId();
       return twitchToken;
     })
     .catch(function (error) {
@@ -64,21 +67,19 @@ function getStreamerId(newStreamerName) {
     )
     .then(function (response) {
       // Get the streamer ID number
-      search = response.data;
-      for (let i = 0; i < search.data.length; i++) {
-        if (search.data[i].display_name == newStreamerName) {
-          newStreamerId = search.data[i].id;
-          streamsFollowed.push({
-            display_name: newStreamerName,
-            id: newStreamerId,
-          });
-          const streamsJSON = JSON.stringify({
-            streamsFollowed,
-          });
-          fs.writeFile("twitchstreamerlist.json", streamsJSON, (error) => {
-            if (error) throw error;
-          });
-        }
+      let foundStream = parseStreams(response.data, newStreamerName);
+      if (foundStream != null) {
+        streamsFollowed.push({
+          display_name: foundStream.display_name,
+          id: foundStream.id,
+          is_live: foundStream.is_live,
+        });
+        const streamsJSON = JSON.stringify({
+          streamsFollowed,
+        });
+        fs.writeFile("twitchstreamerlist.json", streamsJSON, (error) => {
+          if (error) throw error;
+        });
       }
     })
     .catch(function (error) {
@@ -86,19 +87,48 @@ function getStreamerId(newStreamerName) {
     });
 }
 
+// for sorting through the JSON data that Twitch responds with on search
+function parseStreams(streams, newStreamerName) {
+  return streams.data.find((stream) => stream.display_name === newStreamerName);
+}
+
 async function twitchLiveNotifications() {
-  axios
-    .post("https://api.twitch.tv/helix/eventsub/subscriptions", {
-      headers: {
-        "Client-ID": process.env.TWITCH_CLIENT_ID,
-        // prettier-ignore
-        "Authorization": twitchToken,
-        "Content-Type": "application/json",
-      },
-    })
-    .catch(function (error) {
-      if (error) throw error;
-    });
+  streamsFollowed.forEach((streamer) => {
+    axios
+      .get(
+        `https://api.twitch.tv/helix/search/channels?query=${streamer.display_name}`,
+        {
+          headers: {
+            // prettier-ignore
+            "Authorization": twitchToken,
+            "Client-Id": process.env.TWITCH_CLIENT_ID,
+          },
+        }
+      )
+      .then(function (response) {
+        let foundStream = parseStreams(response.data, streamer.display_name);
+        if (foundStream != null) {
+          console.log(foundStream.is_live);
+          if (foundStream.is_live == true && streamer.is_live == false) {
+            streamsFollowed.is_live == true;
+            channel.send(
+              `${streamer.display_name} is live playing ${foundStream.game_name}`
+            );
+          } else if (
+            streamer.is_live == false &&
+            streamsFollowed.is_live == true
+          ) {
+            streamsFollowed.is_live == false;
+          } else {
+            return;
+          }
+        }
+        setTimeout(twitchLiveNotifications, 10000);
+      })
+      .catch(function (error) {
+        console.error(`Error checking on currently live streams: ${error}`);
+      });
+  });
 }
 
 // Defining bot commands and interactions
@@ -145,3 +175,7 @@ client.on("message", (msg) => {
 
 parseFollowList();
 getTwitchToken();
+setTimeout(function () {
+  twitchLiveNotifications();
+  console.log("running timeout");
+}, 5000);
