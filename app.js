@@ -17,7 +17,7 @@ const axios = require("axios").default; // HTTP handling
 
 let twitchToken;
 let twitchTokenResponse;
-const streamsFollowed = [];
+let streamsFollowed = [];
 let streamsFollowedNames;
 
 function parseFollowList() {
@@ -31,7 +31,7 @@ function parseFollowList() {
       streamsFollowed.push({
         display_name: streamer.display_name,
         id: streamer.id,
-        is_live: streamer.is_live,
+        is_live: false,
       });
     });
     console.log(streamsFollowed);
@@ -108,7 +108,7 @@ async function twitchLiveNotifications() {
       .then(function (response) {
         let foundStream = parseStreams(response.data, streamer.display_name);
         if (foundStream != null) {
-          console.log(foundStream.is_live);
+          console.log(streamsFollowed);
           if (foundStream.is_live == true && streamer.is_live == false) {
             streamsFollowed.is_live == true;
             channel.send(
