@@ -72,7 +72,7 @@ function getStreamerId(newStreamerName) {
         streamsFollowed.push({
           display_name: foundStream.display_name,
           id: foundStream.id,
-          is_live: foundStream.is_live,
+          is_live: false,
         });
         const streamsJSON = JSON.stringify({
           streamsFollowed,
@@ -89,10 +89,14 @@ function getStreamerId(newStreamerName) {
 
 // for sorting through the JSON data that Twitch responds with on search
 function parseStreams(streams, newStreamerName) {
-  return streams.data.find((stream) => stream.display_name === newStreamerName);
+  return streams.data.find(
+    (stream) =>
+      stream.display_name.toUpperCase() === newStreamerName.toUpperCase()
+  );
 }
 
 async function twitchLiveNotifications() {
+  // tracks a value for is_live and compares it to the current stat, for checking if streamers are live
   streamsFollowed.forEach((streamer) => {
     axios
       .get(
@@ -108,9 +112,9 @@ async function twitchLiveNotifications() {
       .then(function (response) {
         let foundStream = parseStreams(response.data, streamer.display_name);
         if (foundStream != null) {
-          console.log(streamsFollowed);
+          console.log(streamer);
           if (foundStream.is_live == true && streamer.is_live == false) {
-            streamsFollowed.is_live == true;
+            streamer.is_live = true;
             channel.send(
               `${streamer.display_name} is live playing ${foundStream.game_name}`
             );
@@ -118,12 +122,11 @@ async function twitchLiveNotifications() {
             streamer.is_live == false &&
             streamsFollowed.is_live == true
           ) {
-            streamsFollowed.is_live == false;
+            streamer.is_live = false;
           } else {
             return;
           }
         }
-        setTimeout(twitchLiveNotifications, 10000);
       })
       .catch(function (error) {
         console.error(`Error checking on currently live streams: ${error}`);
@@ -175,7 +178,6 @@ client.on("message", (msg) => {
 
 parseFollowList();
 getTwitchToken();
-setTimeout(function () {
+setInterval(function () {
   twitchLiveNotifications();
-  console.log("running timeout");
-}, 5000);
+}, 10000);
