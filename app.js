@@ -134,6 +134,18 @@ async function twitchLiveNotifications() {
   });
 }
 
+function removeStreamer(streamerRemoved) {
+  streamsFollowed = streamsFollowed.filter(function (streamer) {
+    return (
+      streamer.display_name.toUpperCase() !== streamerRemoved.toUpperCase()
+    );
+  });
+  const streamsJSON = JSON.stringify({ streamsFollowed });
+  fs.writeFile("twitchstreamerlist.json", streamsJSON, (error) => {
+    if (error) throw error;
+  });
+}
+
 // Defining bot commands and interactions
 client.on("message", (msg) => {
   if (msg.content.startsWith(prefix)) {
@@ -165,9 +177,13 @@ client.on("message", (msg) => {
           )}.`
         );
         break;
+      case "unfollow":
+        removeStreamer(msgSplit[1]);
+        msg.channel.send(`No longer following ${msgSplit[1]}`);
+        break;
       case "commands":
         msg.channel.send(
-          "Currently available commands: !newstreamer, !liststreams, !commands."
+          "Currently available commands: !newstreamer, !liststreams, !commands, !unfollow."
         );
         break;
       default:
