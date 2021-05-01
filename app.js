@@ -34,7 +34,6 @@ function parseFollowList() {
         is_live: false,
       });
     });
-    console.log(streamsFollowed);
   });
 }
 
@@ -112,7 +111,6 @@ async function twitchLiveNotifications() {
       .then(function (response) {
         let foundStream = parseStreams(response.data, streamer.display_name);
         if (foundStream != null) {
-          console.log(streamer);
           if (foundStream.is_live == true && streamer.is_live == false) {
             streamer.is_live = true;
             channel.send(
