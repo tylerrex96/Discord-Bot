@@ -114,7 +114,7 @@ async function twitchLiveNotifications() {
           if (foundStream.is_live == true && streamer.is_live == false) {
             streamer.is_live = true;
             channel.send(
-              `${streamer.display_name} is live playing ${foundStream.game_name}`
+              `${streamer.display_name} is currently live playing ${foundStream.game_name} at https://twitch.tv/${streamer.display_name}!`
             );
           } else if (
             streamer.is_live == false &&
@@ -153,7 +153,6 @@ client.on("message", (msg) => {
       case "newstreamer": // Adds a new streamer to the follow list
         streamsFollowedNames = [];
         streamsFollowed.forEach((streamer) => {
-          // appears to be case sensitive, will fix later
           streamsFollowedNames.push(streamer.display_name); // maybe make this to a function later
         });
         if (streamsFollowedNames.includes(msgSplit[1])) {

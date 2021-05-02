@@ -1,1 +1,10 @@
-{"streamsFollowed":[{"display_name":"Belphion","id":"76800486","is_live":false},{"display_name":"moistcr1tikal","id":"132230344","is_live":false},{"display_name":"TimTheTatman","id":"36769016","is_live":false},{"display_name":"PaymoneyWubby","id":"38251312","is_live":false},{"display_name":"Amouranth","id":"125387632","is_live":false},{"display_name":"FumblerTV","id":"116020659","is_live":false},{"display_name":"pokimane","id":"44445592","is_live":false}]}
+{
+  "streamsFollowed": [
+    { "display_name": "Belphion", "id": "76800486", "is_live": false },
+    { "display_name": "moistcr1tikal", "id": "132230344", "is_live": false },
+    { "display_name": "PaymoneyWubby", "id": "38251312", "is_live": false },
+    { "display_name": "Amouranth", "id": "125387632", "is_live": false },
+    { "display_name": "FumblerTV", "id": "116020659", "is_live": false },
+    { "display_name": "lilypichu", "id": "31106024", "is_live": true }
+  ]
+}
