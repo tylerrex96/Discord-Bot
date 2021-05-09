@@ -144,47 +144,55 @@ function removeStreamer(streamerRemoved) {
   });
 }
 
-// Defining bot commands and interactions
+// defining all user commands
 client.on("message", (msg) => {
   if (msg.content.startsWith(prefix)) {
     const msgBody = msg.content.slice(prefix.length);
     const msgSplit = msgBody.split(" ");
     switch (msgSplit[0]) {
-      case "newstreamer": // Adds a new streamer to the follow list
-        streamsFollowedNames = [];
-        streamsFollowed.forEach((streamer) => {
-          streamsFollowedNames.push(streamer.display_name); // maybe make this to a function later
-        });
-        if (streamsFollowedNames.includes(msgSplit[1])) {
-          msg.channel.send("This streamer is already on the list!");
-          break;
-        } else {
-          msg.channel.send(`New streamer added: ${msgSplit[1]}`);
-          getStreamerId(msgSplit[1]);
-          break;
+      case "twitch": // defining all user commands relating to the twitch API
+        switch (msgSplit[1]) {
+          case "follow":
+            streamsFollowedNames = [];
+            streamsFollowedNames.forEach((streamer) => {
+              streamsFollowedNames.push(streamer.display_name);
+            });
+            if (streamsFollowedNames.includes(msgSplit[2])) {
+              msg.channel.send("This streamer is already being followed!");
+              break;
+            } else {
+              msg.channel.send(`New streamer added: ${msgSplit[2]}`);
+              getStreamerId(msgSplit[2]);
+              break;
+            }
+          case "list":
+            streamsFollowedNames = [];
+            streamsFollowed.forEach((streamer) => {
+              streamsFollowedNames.push(streamer.display_name);
+            });
+            msg.channel.send(
+              `Streams currently being followed: ${streamsFollowedNames.join(
+                ", "
+              )}`
+            );
+            break;
+          case "unfollow":
+            removeStreamer(msgSplit[2]);
+            msg.channel.send(`${msgSplit[2]} is no longer being followed!`);
+            break;
+          case "help":
+            msg.channel.send(
+              "Currently available Twitch commands: follow, unfollow, list, help."
+            );
+            break;
+          default:
+            msg.channel.send(
+              `${msgBody[2]} isn't a valid Twitch command! Type "!twitch help" for a list of valid commands.`
+            );
         }
-      case "liststreams": // list the names of all channels currently being followed
-        streamsFollowedNames = [];
-        streamsFollowed.forEach((streamer) => {
-          streamsFollowedNames.push(streamer.display_name);
-        });
-        msg.channel.send(
-          `Streams currently being followed: ${streamsFollowedNames.join(
-            ", "
-          )}.`
-        );
         break;
-      case "unfollow":
-        removeStreamer(msgSplit[1]);
-        msg.channel.send(`No longer following ${msgSplit[1]}`);
+      case youtube:
         break;
-      case "commands":
-        msg.channel.send(
-          "Currently available commands: !newstreamer, !liststreams, !commands, !unfollow."
-        );
-        break;
-      default:
-        msg.channel.send("Sorry! Didn't recognize that command.");
     }
   }
 });
